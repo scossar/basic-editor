@@ -57,7 +57,7 @@ class Editor {
 			<input type="hidden" id="x" name="content">
 			<trix-editor input="x" class="trix-content"></trix-editor>
 
-			<input type="button" value="Post to Discourse" id="submit-post-to-discourse">
+			<input type="submit" value="Post to Discourse" id="submit-post-to-discourse">
 		</form>
 
 		<?php

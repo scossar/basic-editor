@@ -1,8 +1,7 @@
 jQuery(document).ready(function () {
 
-    jQuery("#submit-post-to-discourse").click(function (event) {
+    jQuery("#post-to-discourse").submit(function (event) {
 
-        // var postContent = jQuery( "#x" ).val(),
         var url = post_to_discourse_script.ajaxurl,
             data = jQuery('#post-to-discourse').serialize();
 
