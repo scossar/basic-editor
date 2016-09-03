@@ -26,8 +26,6 @@ class Editor {
 		add_action( 'wp_discourse_after_comments', array( $this, 'comment_form' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
-//		add_action( 'admin_post_create_discourse_post', array( $this, 'post_to_discourse' ) );
-//		add_action( 'wp_ajax_create_discourse_post', array( $this, 'post_to_discourse' ) );
 		add_action( 'wp_ajax_create_discourse_post', array( $this, 'ajax_post_to_discourse' ) );
 		add_action( 'wp_ajax__nopriv_create_discourse_post', array( $this, 'ajax_post_to_discourse' ) );
 	}
@@ -131,8 +129,6 @@ class Editor {
 		     ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['post_to_discourse_nonce'] ) ), 'post_to_discourse' ) ) {
 			var_dump('something is wrong'); die;
 		}
-
-		$post_content = $_POST['discourse_post'];
 
 		$current_user = wp_get_current_user();
 		$user_id = $current_user->ID;
