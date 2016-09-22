@@ -26,8 +26,6 @@ class Editor {
 		add_action( 'wp_discourse_after_comments', array( $this, 'comment_form' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
-//		add_action( 'admin_post_create_discourse_post', array( $this, 'post_to_discourse' ) );
-//		add_action( 'wp_ajax_create_discourse_post', array( $this, 'post_to_discourse' ) );
 		add_action( 'wp_ajax_create_discourse_post', array( $this, 'ajax_post_to_discourse' ) );
 		add_action( 'wp_ajax__nopriv_create_discourse_post', array( $this, 'ajax_post_to_discourse' ) );
 	}
@@ -51,18 +49,13 @@ class Editor {
 		wp_enqueue_style( 'custom_css' );
 	}
 
-
 	public function comment_form( $topic_id ) { ?>
 		<h3>Post a comment</h3>
 		<form class="wp-discourse-create-comment" id="post-to-discourse" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
 			<?php wp_nonce_field( 'post_to_discourse', 'post_to_discourse_nonce' ); ?>
-<!--			<input type="hidden" name="action" value="create_discourse_post">-->
 			<input type="hidden" id="topic_id" name="topic_id" value="<?php echo $topic_id; ?>">
-			<input type="hidden" name="current_page" value="<?php echo get_permalink(); ?>">
-<!--			<textarea name="discourse_post" id="discourse_post" cols="30" rows="10"></textarea>-->
-			<input type="hidden" id="x" name="content">
+			<input class="test-class" id="x" value="" type="hidden" name="content">
 			<trix-editor input="x" class="trix-content"></trix-editor>
-
 			<input type="button" value="Post to Discourse" id="submit-post-to-discourse">
 		</form>
 
@@ -96,7 +89,6 @@ class Editor {
 		if ( array_key_exists( 'user', $user_data ) ) {
 			$discourse_username = $user_data['user']['username'];
 			$discourse_userid = $user_data['user']['id'];
-			// Get user api key
 			$api_key_url = "{$base_url}/admin/users/{$discourse_userid}/generate_api_key.json";
 			$api_key_url = add_query_arg( array(
 				'api_key' => $api_key,
@@ -105,14 +97,22 @@ class Editor {
 
 			$response = wp_remote_post( $api_key_url );
 
+			if ( ! DiscourseUtilities::validate( $response ) ) {
+				// Do something.
+				exit();
+			}
+
 			$response = json_decode( wp_remote_retrieve_body( $response ), true );
 
 			if ( array_key_exists( 'api_key', $response ) ) {
 				$user_api_key = $response['api_key']['key'];
+			} else {
+				// Do something.
+				exit();
 			}
 
-			$topic_id = $_POST['topic_id'];
-			$raw = $_POST['post_content'];
+			$topic_id = intval( $_POST['topic_id'] );
+			$raw = wp_unslash( $_POST['post_content'] );
 			error_log($raw);
 			$posts_url = $base_url . '/posts';
 			$posts_url = add_query_arg( array(
@@ -125,10 +125,11 @@ class Editor {
 
 			$result = wp_remote_post( $posts_url );
 			if ( ! DiscourseUtilities::validate( $result ) ) {
+				// Do something.
+				exit();
 			}
 		}
 
-		echo $raw;
 		exit();
 	}
 }
