@@ -1,0 +1,62 @@
+trix-editor {
+  [data-trix-mutable=true] {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    img {
+      box-shadow: 0 0 0 2px highlight;
+    }
+  }
+
+  .attachment {
+    .remove {
+      display: block;
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      width: 24px;
+      height: 24px;
+      border-radius: 24px;
+      line-height: 22px;
+      font-size: 0;
+      color: black;
+      text-align: center;
+      text-decoration: none;
+      background-color: #fff;
+      border: 1px solid #bbb;
+      box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.1);
+
+      &:after {
+        content: '×';
+        font-size: 18px;
+        font-weight: bold;
+        opacity: 0.6;
+      }
+
+      &:hover {
+        &:after {
+          opacity: 1;
+        }
+      }
+    }
+
+    .caption {
+      &.caption-editing {
+        textarea {
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          font-size: 13px;
+          line-height: 13px;
+          text-align: center;
+          border: none;
+          outline: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+        }
+      }
+    }
+  }
+}
