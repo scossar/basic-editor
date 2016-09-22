@@ -22,7 +22,7 @@ class Editor {
 	protected $options;
 
 	public function __construct() {
-		$this->options = get_option( 'discourse' );
+		add_action( 'init', array( $this, 'setup_options' ) );
 		add_action( 'wp_discourse_after_comments', array( $this, 'comment_form' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
@@ -30,6 +30,10 @@ class Editor {
 //		add_action( 'wp_ajax_create_discourse_post', array( $this, 'post_to_discourse' ) );
 		add_action( 'wp_ajax_create_discourse_post', array( $this, 'ajax_post_to_discourse' ) );
 		add_action( 'wp_ajax__nopriv_create_discourse_post', array( $this, 'ajax_post_to_discourse' ) );
+	}
+
+	public function setup_options() {
+		$this->options = DiscourseUtilities::get_options();
 	}
 
 	public function enqueue_scripts() {
@@ -116,6 +120,7 @@ class Editor {
 				'topic_id' => $topic_id,
 				'raw' => $raw,
 			), $posts_url );
+			error_log( $posts_url );
 
 			$result = wp_remote_post( $posts_url );
 			if ( ! DiscourseUtilities::validate( $result ) ) {
@@ -123,69 +128,6 @@ class Editor {
 		}
 
 		echo $raw;
-		exit();
-	}
-
-	public function post_to_discourse() {
-		if ( ! isset( $_POST['post_to_discourse_nonce'] ) ||
-		     ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['post_to_discourse_nonce'] ) ), 'post_to_discourse' ) ) {
-			var_dump('something is wrong'); die;
-		}
-
-		$post_content = $_POST['discourse_post'];
-
-		$current_user = wp_get_current_user();
-		$user_id = $current_user->ID;
-		$base_url = $this->options['url'];
-		$api_key = $this->options['api-key'];
-		$api_username = $this->options['publish-username'];
-		// This section is to retrieve the Discourse user_id. It would also be possible to retrieve Discourse
-		// user info on login to WordPress and store it in the user_metadata table.
-		$user_url = $base_url . "/users/by-external/$user_id.json";
-		$user_url = add_query_arg( array(
-			'api_key'      => $api_key,
-			'api_username' => $api_username,
-		), $user_url );
-		$user_url = esc_url_raw( $user_url );
-		$user_data = wp_remote_get( $user_url );
-		if ( ! DiscourseUtilities::validate( $user_data ) ) {
-			return new \WP_Error( 'unable_to_retrieve_user_data', 'There was an error in retrieving the current user data from Discourse.' );
-		}
-		$user_data = json_decode( wp_remote_retrieve_body( $user_data ), true );
-		if ( array_key_exists( 'user', $user_data ) ) {
-			$discourse_username = $user_data['user']['username'];
-			$discourse_userid = $user_data['user']['id'];
-			// Get user api key
-			$api_key_url = "{$base_url}/admin/users/{$discourse_userid}/generate_api_key.json";
-			$api_key_url = add_query_arg( array(
-				'api_key' => $api_key,
-				'api_username' => $api_username,
-			), $api_key_url );
-
-			$response = wp_remote_post( $api_key_url );
-
-			$response = json_decode( wp_remote_retrieve_body( $response ), true );
-
-			if ( array_key_exists( 'api_key', $response ) ) {
-				$user_api_key = $response['api_key']['key'];
-			}
-
-			$topic_id = $_POST['topic_id'];
-			$raw = $_POST['discourse_post'];
-			$posts_url = $base_url . '/posts';
-			$posts_url = add_query_arg( array(
-				'api_key'      => $user_api_key,
-				'api_username' => $discourse_username,
-				'topic_id' => $topic_id,
-				'raw' => $raw,
-			), $posts_url );
-
-			$result = wp_remote_post( $posts_url );
-			if ( ! DiscourseUtilities::validate( $result ) ) {
-			}
-		}
-
-		wp_redirect( $_POST['current_page'] );
 		exit();
 	}
 }
